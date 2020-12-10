@@ -1,9 +1,11 @@
 from PIL import Image
 import os
 
-def openimage( fn )
+logfp = open('Traffic.log','a')
+
+def openimage( fn ):
   img = Image.open( fn )
-  scaling = [ img.size[0]/2, img.size[1]/2 ]
+  scaling = [ int(img.size[0]/2), int(img.size[1]/2) ]
   return img.resize( tuple( scaling ) )
 
 def createMap(img1, img2, threshold):
@@ -24,7 +26,24 @@ def createMap(img1, img2, threshold):
         else:
           color.append( 0 )
       imgout.putpixel( (w,h), tuple(color) )
-  return imgout 
+  return imgout, count 
 
-imgout,count = createMap(img1s, img2s, 128)
-imgout.save( fn+'.png')
+def getFilelist( exten ):
+  fl_out = []
+  for x in os.listdir() :
+    if x.__contains__( exten ):
+      fl_out.append(x)
+  return fl_out
+
+filelist = getFilelist('.jpg')
+
+prev_image = openimage( filelist[0] )
+for images in range( filelist.__len__() - 1 ):
+  basefn = filelist[images+1]
+  ts = basefn.replace('.jpg','')
+  next_image = openimage( basefn )
+  imgout,count = createMap( prev_image, next_image, 128 )
+  prev_image = next_image
+  imgout.save( ts +'.png')
+  logfp.write( ts + ', ' + str( count ) + '\n' )
+  logfp.flush()
